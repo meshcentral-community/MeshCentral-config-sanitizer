@@ -256,6 +256,35 @@
         .cm-s-dracula .cm-number { color: #ae81ff !important; }
         .cm-s-dracula .cm-atom { color: #f92672 !important; }
         .cm-s-dracula .cm-comment { color: #75715e !important; }
+
+        /* Light mode overrides */
+        [data-theme="light"] body {
+            background-color: #ffffff;
+            color: #24292e;
+        }
+        [data-theme="light"] .header { border-bottom-color: #e1e4e8; }
+        [data-theme="light"] .title { color: #0366d6; }
+        [data-theme="light"] button {
+            background-color: #f6f8fa;
+            color: #24292e;
+            border-color: #e1e4e8;
+        }
+        [data-theme="light"] button:hover { background-color: #e1e4e8; }
+        [data-theme="light"] .dropdown-menu {
+            background-color: #ffffff;
+            border-color: #e1e4e8;
+        }
+        [data-theme="light"] .dropdown-menu a { color: #24292e; }
+        [data-theme="light"] .dropdown-menu a:hover { background-color: #f6f8fa; }
+        [data-theme="light"] .toast {
+            background-color: #ffffff;
+            color: #24292e;
+            border-color: #e1e4e8;
+        }
+        [data-theme="light"] .CodeMirror { border-color: #d1d5da; }
+        [data-theme="light"] ::-webkit-scrollbar-thumb { background: #959da5; }
+        [data-theme="light"] ::-webkit-scrollbar-thumb:hover { background: #6a737d; }
+        [data-theme="light"] ::-webkit-scrollbar-track { background: #f6f8fa; }
     </style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.12/codemirror.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.12/theme/dracula.min.css">
@@ -273,6 +302,12 @@
                 <button id="copyBtn" title="Copy the current content to clipboard" onclick="copyToClipboard();">Copy</button>
             </div>
             <div class="header-right">
+                <button id="themeToggle" title="Toggle light / dark mode">
+                    <svg id="themeIcon" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                </button>
                 <div onclick="toggleDropdown()" class="profile-dropdown">
                     <img src="https://avatars.githubusercontent.com/u/106290334" alt="Logo" class="logo">
                     <span class="profile-name">Melo</span>
@@ -301,7 +336,6 @@
 				startState: function() { return jsonMode.startState(); },
 		
 				token: function(stream, state) {
-					// Detect keys manually before delegating to jsonMode
 					if (stream.peek() === '"') {
 						stream.next();
 						let key = "";
@@ -310,18 +344,13 @@
 							if (ch === '"') break;
 							key += ch;
 						}
-		
-						// Look ahead to see if it's a key (followed by :)
 						const ahead = stream.string.slice(stream.pos).trimStart();
 						if (ahead.startsWith(":")) {
 							if (key.startsWith("_")) return "comment";
 							return "property";
 						}
-		
 						return "string";
 					}
-		
-					// Fallback to normal JSON behavior
 					var style = jsonMode.token(stream, state);
 					return style;
 				},
@@ -339,144 +368,44 @@
 			};
 		});
 
-
-        // List of keys whose values should be redacted (add more here as needed)
+        // === ALL ORIGINAL LOGIC BELOW (unchanged) ===
         const redactKeys = [
-            "Title",
-            "title",
-            "title2",
-			"subtitle",
-            "titlePicture",
-            "loginPicture",
-            "welcomePicture",
-            "welcomeText",
-            "pwaLogo",
-            "meshMessengerTitle",
-			"image",
-			"loginfooter",
-			"footer"
+            "Title", "title", "title2", "subtitle", "titlePicture", "loginPicture",
+            "welcomePicture", "welcomeText", "pwaLogo", "meshMessengerTitle",
+            "image", "loginfooter", "footer"
         ];
 
-        // List of irrelevant keys to remove (add more here as needed; keys starting with '_' are handled separately)
         const irrelevantKeys = [
-            "agentCustomization",
-            "agentFileInfo",
-            "assistantCustomization",
-            "androidCustomization",
-            "Title",
-            "title",
-            "title2",
-            "titlePicture",
-            "loginPicture",
-            "welcomePicture",
-            "welcomeText",
-            "pwaLogo",
-            "meshMessengerTitle",
-            "maxDeviceView",
-            "nightMode",
-            "scrollToTop",
-            "meshMessengerPicture",
-            "footer",
-            "hide",
-            "loginfooter",
-            "passwordRequirements",
-            "showNotesPanel",
-            "userSessionsSort",
-            "consentMessages",
-            "redirects",
-            "userConsentFlags",
-            "notificationMessages",
-            "desktopPrivacyBarText",
-            "localSessionRecording",
-            "sessionRecording",
-            "showPasswordLogin",
+            "agentCustomization", "agentFileInfo", "assistantCustomization",
+            "androidCustomization", "Title", "title", "title2", "titlePicture",
+            "loginPicture", "welcomePicture", "welcomeText", "pwaLogo",
+            "meshMessengerTitle", "maxDeviceView", "nightMode", "scrollToTop",
+            "meshMessengerPicture", "footer", "hide", "loginfooter",
+            "passwordRequirements", "showNotesPanel", "userSessionsSort",
+            "consentMessages", "redirects", "userConsentFlags",
+            "notificationMessages", "desktopPrivacyBarText",
+            "localSessionRecording", "sessionRecording", "showPasswordLogin",
             "showLanguageSelect"
         ];
 
         const sensitiveKeys = new Set([
-            ...redactKeys,
-            "key",
-            "password",
-            "secret",
-            "clientSecret",
-            "clientId",
-            "authCookieEncryptionKey",
-            "agentAuthToken",
-            "bindPw",
-            "bindDn",
-            "connectionString",
-            "sessionKey",
-            "orphanAgentUser",
-            "pass",
-			"ssid",
-			"certfiles",
-			"user",
-			"names",
-			"clientid",
-			"clientsecret",
-			"refreshToken",
-			"tenantid",
-			"keyfile",
-			"apikey",
-			"token",
-			"runas",
-			"loginfooter",
-			"footer",
-			"agentKey",
-			"loginKey",
-			"zipPassword",
-			"syslogauth",
-			"dbRecordsEncryptKey",
-			"dbRecordsDecryptKey",
-			"dbEncryptKey",
-			"certificatePrivateKeyPassword",
-			"id",
-			"newMebxPassword",
-			"username",
-			"from",
-			"newAccountsUserGroups",
-			"agentCoreDumpUsers"
+            ...redactKeys, "key", "password", "secret", "clientSecret", "clientId",
+            "authCookieEncryptionKey", "agentAuthToken", "bindPw", "bindDn",
+            "connectionString", "sessionKey", "orphanAgentUser", "pass", "ssid",
+            "certfiles", "user", "names", "clientid", "clientsecret",
+            "refreshToken", "tenantid", "keyfile", "apikey", "token", "runas",
+            "loginfooter", "footer", "agentKey", "loginKey", "zipPassword",
+            "syslogauth", "dbRecordsEncryptKey", "dbRecordsDecryptKey",
+            "dbEncryptKey", "certificatePrivateKeyPassword", "id",
+            "newMebxPassword", "username", "from", "newAccountsUserGroups",
+            "agentCoreDumpUsers"
         ]);
 
         const userGroupKeys = ["manageAllDeviceGroups", "manageCrossDomain", "adminAccounts", "InterUserMessaging"];
-
-        const redactSectionsSet = new Set([
-            "agentCustomization",
-            "agentFileInfo",
-            "assistantCustomization",
-            "androidCustomization"
-        ]);
-
-        const whitelistedDomains = new Set([
-            "meshcentral.com",
-            "cloudflare.com",
-            "google.com"
-        ]);
-
-        const tlds = new Set([
-            "com",
-            "net",
-            "org",
-            "io",
-            "de",
-            "edu",
-            "gov",
-            "mil",
-            "uk",
-            "ca",
-            "au",
-            "fr",
-            "jp",
-            "cn",
-            "in",
-            "br",
-            "ru",
-            "it",
-            "es"
-        ]);
-
+        const redactSectionsSet = new Set(["agentCustomization", "agentFileInfo", "assistantCustomization", "androidCustomization"]);
+        const whitelistedDomains = new Set(["meshcentral.com", "cloudflare.com", "google.com"]);
+        const tlds = new Set(["com","net","org","io","de","edu","gov","mil","uk","ca","au","fr","jp","cn","in","br","ru","it","es"]);
         const domainRegex = /\b(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}\b/g;
-
         const ipRegex = /\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b/g;
 
         function isInternalIP(ip) {
@@ -526,16 +455,12 @@
                 ipRegex.lastIndex = 0;
                 while ((match = ipRegex.exec(obj)) !== null) {
                     const ip = match[0];
-                    if (!isInternalIP(ip)) {
-                        ips.add(ip);
-                    }
+                    if (!isInternalIP(ip)) ips.add(ip);
                 }
             } else if (Array.isArray(obj)) {
                 obj.forEach(value => collectIPsFromObj(value, ips));
             } else if (obj !== null && typeof obj === 'object') {
-                Object.entries(obj).forEach(([key, value]) => {
-                    collectIPsFromObj(value, ips);
-                });
+                Object.entries(obj).forEach(([key, value]) => collectIPsFromObj(value, ips));
             }
             return ips;
         }
@@ -557,20 +482,14 @@
                                     let user = '';
                                     if (parts.length >= 1) {
                                         user = parts[parts.length - 1];
-                                        if (parts.length > 1) {
-                                            group = parts[0];
-                                        }
+                                        if (parts.length > 1) group = parts[0];
                                     }
                                     if (user.includes('@')) {
                                         const [u] = user.split('@');
                                         user = u;
                                     }
-                                    if (user && !userMap.has(user)) {
-                                        userMap.set(user, `user-${userMap.size + 1}`);
-                                    }
-                                    if (group && !groupMap.has(group)) {
-                                        groupMap.set(group, `domain-${groupMap.size + 1}`);
-                                    }
+                                    if (user && !userMap.has(user)) userMap.set(user, `user-${userMap.size + 1}`);
+                                    if (group && !groupMap.has(group)) groupMap.set(group, `domain-${groupMap.size + 1}`);
                                 }
                             });
                         } else {
@@ -581,16 +500,13 @@
             }
             recurse(obj);
 
-            // Also check for orphanAgentUser
             function findOrphan(current) {
                 if (Array.isArray(current)) {
                     current.forEach(findOrphan);
                 } else if (typeof current === 'object' && current !== null) {
                     Object.entries(current).forEach(([key, value]) => {
                         if (key === "orphanAgentUser" && typeof value === 'string') {
-                            if (!userMap.has(value)) {
-                                userMap.set(value, `user-${userMap.size + 1}`);
-                            }
+                            if (!userMap.has(value)) userMap.set(value, `user-${userMap.size + 1}`);
                         } else {
                             findOrphan(value);
                         }
@@ -713,9 +629,7 @@
         }
 
         function replaceSensitive(obj, sensitiveSet, userMap) {
-            if (obj === null || typeof obj !== 'object') {
-                return obj;
-            }
+            if (obj === null || typeof obj !== 'object') return obj;
             if (Array.isArray(obj)) {
                 return obj.map(value => replaceSensitive(value, sensitiveSet, userMap));
             }
@@ -737,32 +651,24 @@
 
         function cleanupConfig() {
             const text = codeEditor.getValue().trim();
-            if (!text) {
-                showToast('Please paste or upload a config.json first.');
-                return;
-            }
+            if (!text) { showToast('Please paste or upload a config.json first.'); return; }
             try {
                 const obj = JSON.parse(text);
                 const cleaned = removeIrrelevant(obj);
-                const cleanedText = JSON.stringify(cleaned, null, 2);
-                codeEditor.setValue(cleanedText);
+                codeEditor.setValue(JSON.stringify(cleaned, null, 2));
             } catch (error) {
                 showToast('Invalid JSON: ' + error.message);
             }
         }
 
         function removeIrrelevant(obj) {
-            if (obj === null || typeof obj !== 'object') {
-                return obj;
-            }
+            if (obj === null || typeof obj !== 'object') return obj;
             if (Array.isArray(obj)) {
                 return obj.map(item => removeIrrelevant(item)).filter(item => item !== undefined);
             }
             const newObj = {};
             Object.entries(obj).forEach(([key, value]) => {
-                if (key.startsWith('_') || irrelevantKeys.includes(key)) {
-                    return; // Skip this key and its value
-                }
+                if (key.startsWith('_') || irrelevantKeys.includes(key)) return;
                 newObj[key] = removeIrrelevant(value);
             });
             return newObj;
@@ -770,39 +676,24 @@
 
         function sanitizeConfig() {
             const text = codeEditor.getValue().trim();
-            if (!text) {
-                showToast('Please paste or upload a config.json first.');
-                return;
-            }
+            if (!text) { showToast('Please paste or upload a config.json first.'); return; }
             try {
                 const obj = JSON.parse(text);
-
                 const { userMap, groupMap } = collectUsersAndGroupsFromObj(obj);
-
                 const ips = collectIPsFromObj(obj);
                 const ipMap = {};
                 let ipCounter = 1;
-                Array.from(ips).sort().forEach(ip => {
-                    ipMap[ip] = `REDACTED_IP-${ipCounter++}`;
-                });
-
+                Array.from(ips).sort().forEach(ip => { ipMap[ip] = `REDACTED_IP-${ipCounter++}`; });
                 let sanitized = replaceIPs(obj, ipMap);
-
                 const baseDomains = collectBaseDomains(sanitized);
                 const baseDomainMap = {};
                 let counter = 1;
-                Array.from(baseDomains).forEach(base => {
-                    baseDomainMap[base] = `domain-${counter++}.com`;
-                });
-
+                Array.from(baseDomains).forEach(base => { baseDomainMap[base] = `domain-${counter++}.com`; });
                 sanitized = replaceDomains(sanitized, baseDomainMap);
-
                 sanitized = sanitizeUserGroups(sanitized, userMap, groupMap);
                 sanitized = redactSections(sanitized);
                 sanitized = replaceSensitive(sanitized, sensitiveKeys, userMap);
-
-                const sanitizedText = JSON.stringify(sanitized, null, 2);
-                codeEditor.setValue(sanitizedText);
+                codeEditor.setValue(JSON.stringify(sanitized, null, 2));
             } catch (error) {
                 showToast('Invalid JSON: ' + error.message);
             }
@@ -822,19 +713,13 @@
 
         function copyToClipboard() {
             const text = codeEditor.getValue().trim();
-            if (!text) {
-                return;
-            }
+            if (!text) return;
             navigator.clipboard.writeText(text).then(() => {
                 const copyBtn = document.getElementById('copyBtn');
                 const originalText = copyBtn.textContent;
                 copyBtn.textContent = 'Copied!';
-                setTimeout(() => {
-                    copyBtn.textContent = originalText;
-                }, 2000);
-            }).catch(err => {
-                console.error('Failed to copy: ', err);
-            });
+                setTimeout(() => { copyBtn.textContent = originalText; }, 2000);
+            }).catch(err => { console.error('Failed to copy: ', err); });
         }
 
         function handleFileUpload(event) {
@@ -859,10 +744,7 @@
 
         function downloadConfig() {
             const text = codeEditor.getValue().trim();
-            if (!text) {
-                showToast('No content to download.');
-                return;
-            }
+            if (!text) { showToast('No content to download.'); return; }
             const blob = new Blob([text], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -874,7 +756,6 @@
             URL.revokeObjectURL(url);
         }
 
-        // Dropdown functionality
         function toggleDropdown() {
             const menu = document.getElementById('dropdown-menu');
             menu.style.display = menu.style.display === 'flex' ? 'none' : 'flex';
@@ -903,7 +784,7 @@
             extraKeys: { "Tab": "indentMore", "Shift-Tab": "indentLess" }
         });
 
-        // Placeholder workaround
+        // Placeholder
         const placeholderText = "Paste your config.json here or upload a file...";
         const placeholderEl = document.createElement('span');
         placeholderEl.textContent = placeholderText;
@@ -919,6 +800,30 @@
         }
         updatePlaceholder();
         codeEditor.on('change', updatePlaceholder);
+
+        // === LIGHT/DARK TOGGLE (exact same as Config Generator) ===
+        document.addEventListener('DOMContentLoaded', () => {
+            const themeToggle = document.getElementById('themeToggle');
+            const themeIcon = document.getElementById('themeIcon');
+            const html = document.documentElement;
+
+            const moon = "M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z";
+            const sun  = "M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m15.364 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 1 1-8 0 4 4 0 0 1 8 0z";
+
+            const saved = localStorage.getItem('meshcentral-theme') || 'dark';
+            html.dataset.theme = saved;
+            themeIcon.innerHTML = `<path d="${saved === 'light' ? sun : moon}"></path>`;
+            codeEditor.setOption('theme', saved === 'light' ? 'default' : 'dracula');
+
+            themeToggle.addEventListener('click', () => {
+                const isLight = html.dataset.theme === 'light';
+                const newTheme = isLight ? 'dark' : 'light';
+                html.dataset.theme = newTheme;
+                localStorage.setItem('meshcentral-theme', newTheme);
+                themeIcon.innerHTML = `<path d="${newTheme === 'light' ? sun : moon}"></path>`;
+                codeEditor.setOption('theme', newTheme === 'light' ? 'default' : 'dracula');
+            });
+        });
     </script>
 </body>
 </html>
