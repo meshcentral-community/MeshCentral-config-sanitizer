@@ -10,8 +10,10 @@ window.MCTools = window.MCTools || {};
  */
 window.MCTools.replaceInString = function (str, baseDomainMap) {
     let replaced = str;
-    Object.entries(baseDomainMap).forEach(([base, placeholder]) => {
-        const baseRegex = new RegExp(window.MCTools.escapeRegExp(base), 'g');
+    // Sort base domains descending by length to prevent shorter domain prefix collisions (e.g. example.com before sub.example.com)
+    const sortedEntries = Object.entries(baseDomainMap).sort((a, b) => b[0].length - a[0].length);
+    sortedEntries.forEach(([base, placeholder]) => {
+        const baseRegex = new RegExp('(?<![a-zA-Z0-9-])' + window.MCTools.escapeRegExp(base) + '(?![a-zA-Z0-9-])', 'g');
         replaced = replaced.replace(baseRegex, placeholder);
     });
     return replaced;
@@ -23,8 +25,10 @@ window.MCTools.replaceInString = function (str, baseDomainMap) {
 window.MCTools.replaceIPs = function (obj, ipMap) {
     if (typeof obj === 'string') {
         let replaced = obj;
-        Object.entries(ipMap).forEach(([original, replacement]) => {
-            const regex = new RegExp(window.MCTools.escapeRegExp(original), 'g');
+        // Sort IPs descending by length and use lookarounds to prevent prefix collision (e.g. 1.2.3.4 matching inside 1.2.3.40)
+        const sortedEntries = Object.entries(ipMap).sort((a, b) => b[0].length - a[0].length);
+        sortedEntries.forEach(([original, replacement]) => {
+            const regex = new RegExp('(?<![0-9.])' + window.MCTools.escapeRegExp(original) + '(?![0-9.])', 'g');
             replaced = replaced.replace(regex, replacement);
         });
         return replaced;
@@ -196,7 +200,7 @@ window.MCTools.sanitizeConfig = function () {
         const ips = window.MCTools.collectIPsFromObj(obj);
         const ipMap = {};
         let ipCounter = 1;
-        Array.from(ips).sort().forEach(ip => { ipMap[ip] = `REDACTED_IP-${ipCounter++}`; });
+        Array.from(ips).sort((a, b) => b.length - a.length).forEach(ip => { ipMap[ip] = `REDACTED_IP-${ipCounter++}`; });
         let sanitized = window.MCTools.replaceIPs(obj, ipMap);
         const baseDomains = window.MCTools.collectBaseDomains(sanitized);
         const baseDomainMap = {};
